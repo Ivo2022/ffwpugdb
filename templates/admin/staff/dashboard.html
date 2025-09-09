@@ -1,0 +1,169 @@
+{% extends "admin/base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Personal Dashboard Link for Staff -->
+        <div class="mb-3">
+            <a href="/member/dashboard" class="btn btn-outline-primary">
+                Go to My Personal Dashboard
+            </a>
+        </div>
+
+    {% if personal_info %}
+        <h2 class="mb-4">Hello {{ personal_info.first_name }} {{ personal_info.last_name }},</h2>
+    {% else %}
+        <!--<h2 class="mb-4">Staff Dashboard for {{ user.username }},</h2>-->
+        <h2 class="mb-4">Staff Dashboard</h2>
+    {% endif %}
+
+    <!-- KPI Cards -->
+    <div class="row">
+        <!-- Total Donations -->
+        <div class="col-md-3">
+            <div class="card text-white bg-primary mb-3 shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">Total Donations</h5>
+                    <h3>{{ donations | sum(attribute='amount') | default(0) }}</h3>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tithe -->
+        <div class="col-md-3">
+            <div class="card text-white bg-success mb-3 shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">Tithe</h5>
+                    <h3>{{ donations | selectattr("donation_type", "equalto", "tithe") | sum(attribute='amount') | default(0) }}</h3>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sunday Donations -->
+        <div class="col-md-3">
+            <div class="card text-white bg-info mb-3 shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">Sunday Donations</h5>
+                    <h3>{{ donations | selectattr("donation_type", "equalto", "sunday donation") | sum(attribute='amount') | default(0) }}</h3>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pledges -->
+        <div class="col-md-3">
+            <div class="card text-white bg-warning mb-3 shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">Pledges</h5>
+                    <h3>{{ donations | selectattr("donation_type", "equalto", "pledge") | sum(attribute='amount') | default(0) }}</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+{{member}}
+    <!-- Recent Donations -->
+    <h4 class="mt-4">Recent 7 Donors</h4>
+    <table class="table table-striped table-bordered">
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Name</th>
+                <th>Donation Type</th>
+                <th>Amount</th>
+                <th>Remarks</th>
+                {% if 'staff' in user.roles %}
+                    <th>Actions</th>
+                {% endif %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for donation in donations[:7] %}
+            <tr>
+                <td>{{ donation.donation_date.strftime('%Y-%m-%d') if donation.donation_date else 'N/A' }}</td>
+                <td>{{ member.first_name }}</td>
+                <td>{{ donation.donation_type | capitalize }}</td>
+                <td>{{ donation.amount }}</td>
+                <td>{{ donation.remarks or '-' }}</td>
+                {% if 'staff' in user.roles %}
+                    <td>
+                        <a href="/donations/edit/{{ donation.id }}" class="btn btn-sm btn-primary">Edit</a>
+                        <!-- Delete button hidden for staff -->
+                        <span class="text-muted">Delete Restricted</span>
+                    </td>
+                {% elif 'admin' in user.roles %}
+                    <td>
+                        <a href="/donations/edit/{{ donation.id }}" class="btn btn-sm btn-primary">Edit</a>
+                        <a href="/donations/delete/{{ donation.id }}" class="btn btn-sm btn-danger">Delete</a>
+                    </td>
+                {% endif %}
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="5" class="text-center text-muted">No donations yet</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- Attendance Summary -->
+    <h4 class="mt-4">Attendance Summary</h4>
+    {% set present_count = attendance | selectattr("status", "equalto", "present") | list | length %}
+    {% set absent_count = attendance | selectattr("status", "equalto", "absent") | list | length %}
+    {% set total_count = attendance | length %}
+
+    <p class="mb-0">
+        Total Attendance Records: {{ total_count or 0 }}<br>
+        Present: {{ present_count or 0 }}<br>
+        Absent: {{ absent_count or 0 }}
+    </p>
+
+    <!-- Recent Attendance -->
+    <h4 class="mt-4">Recent Attendance</h4>
+    <table class="table table-striped table-bordered">
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Status</th>
+                <th>Remarks</th>
+                {% if 'staff' in user.roles or 'admin' in user.roles %}
+                    <th>Actions</th>
+                {% endif %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for record in attendance[:5] %}
+            <tr>
+                <td>{{ record.attendance_date.strftime('%Y-%m-%d') if record.attendance_date else 'N/A' }}</td>
+                <td>
+                    {% if record.status == 'present' %}
+                        <span class="badge bg-success">Present</span>
+                    {% elif record.status == 'absent' %}
+                        <span class="badge bg-danger">Absent</span>
+                    {% elif record.status == 'excused' %}
+                        <span class="badge bg-warning">Excused</span>
+                    {% else %}
+                        <span class="badge bg-secondary">{{ record.status }}</span>
+                    {% endif %}
+                </td>
+                <td>{{ record.remarks or '-' }}</td>
+                {% if 'staff' in user.roles %}
+                    <td>
+                        <a href="/attendance/edit/{{ record.id }}" class="btn btn-sm btn-primary">Edit</a>
+                        <span class="text-muted">Delete Restricted</span>
+                        <a href="/attendance/archive/{{ record.id }}" class="btn btn-sm btn-warning">Archive</a>
+                    </td>
+                {% elif 'admin' in user.roles %}
+                    <td>
+                        <a href="/attendance/edit/{{ record.id }}" class="btn btn-sm btn-primary">Edit</a>
+                        <a href="/attendance/delete/{{ record.id }}" class="btn btn-sm btn-danger">Delete</a>
+                        <a href="/attendance/archive/{{ record.id }}" class="btn btn-sm btn-warning">Archive</a>
+                    </td>
+                {% endif %}
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="4" class="text-center text-muted">No attendance records yet</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

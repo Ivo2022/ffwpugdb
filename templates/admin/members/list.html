@@ -1,0 +1,107 @@
+{% extends "admin/base.html" %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <!-- Sidebar-style navigation -->
+    <div class="row mb-4">
+      <div class="col-12">
+          <h4 class="mb-4">Members Records</h4>
+          <ul class="list-group list-group-horizontal-md">
+              <li class="list-group-item"><a href="/admin/dashboard" class="text-decoration-none">Dashboard</a></li>
+              <li class="list-group-item"><a href="/members" class="text-decoration-none">Members</a></li>
+              <li class="list-group-item"><a href="/donation" class="text-decoration-none">Donations</a></li>
+              <li class="list-group-item"><a href="/attendance" class="text-decoration-none">Attendance</a></li>
+              <li class="list-group-item"><a href="/member/dashboard" class="text-decoration-none">My Dashboard</a></li>
+          </ul>
+      </div>
+  </div>
+  <a href="/members/create" class="btn btn-primary">Create New Member</a>
+</div>
+
+<form method="get" class="row g-2 mb-3">
+  <div class="col-md-7">
+    <input type="text" name="q" value="{{ q }}" class="form-control" placeholder="Search name, email, phone, code">
+  </div>
+  <!---
+  <div class="col-md-2">
+    <select name="status" class="form-select">
+      <option value="">All Status</option>
+      {% for s in ['active','inactive','alumni','guest'] %}
+        <option value="{{ s }}" {% if s == selected_status %}selected{% endif %}>{{ s|capitalize }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  -->
+  <div class="col-md-3">
+    <select name="page_size" class="form-select">
+      {% for n in [5,10,20,50] %}
+        <option value="{{ n }}" {% if n == page_size %}selected{% endif %}>{{ n }} / page</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="col-md-2">
+    <button class="btn btn-outline-primary w-100">Filter</button>
+  </div>
+</form>
+
+<div class="table-responsive">
+<table class="table table-striped align-middle">
+  <thead>
+    <tr>
+      <th>S/No.</th>
+      <th>Code</th>
+      <th>Name</th>
+      <th>Email</th>
+      <th>Phone Number</th>
+      <th>Status</th>
+      <th>Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+  {% for m in members %}
+    <tr>
+      <td>{{ (page - 1) * page_size + loop.index }}</td>
+      <td>{{ m.member_code }}</td>
+      <td>{{ m.first_name|title}} {{ m.last_name|title}}</td>
+      <td>{{ m.email or '-' }}</td>
+      <td>{{ m.phone }}</td>
+      <td>
+        <span class="badge {% if m.status=='active' %}bg-success{% elif m.status=='inactive' %}bg-secondary{% else %}bg-info{% endif %}">
+          {{ m.status|capitalize }}
+        </span>
+      </td>
+      <td class="text-nowrap">
+        <a class="btn btn-sm btn-warning" href="/members/{{ m.id }}/edit">Edit</a>
+        {% if m.status == 'inactive' %}
+        <form method="post" action="/members/{{ m.id }}/restore" style="display:inline;">
+          <button class="btn btn-sm btn-success" onclick="return confirm('Restore this member?')">Restore</button>
+        </form>
+        {% else %}
+        <form method="post" action="/members/{{ m.id }}/archive" style="display:inline;">
+          <button class="btn btn-sm btn-outline-secondary" onclick="return confirm('Archive this member?')">Archive</button>
+        </form>
+        <form method="post" action="/members/{{ m.id }}/delete" style="display:inline;">
+            <button class="btn btn-sm btn-outline-danger" onclick="return confirm('Are you sure, you want to Delete this member?')">Delete</button>
+        </form>
+        {% endif %}
+      </td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+
+{% if pages and pages > 1 %}
+<nav>
+  <ul class="pagination">
+    {% for p in range(1, pages+1) %}
+      <li class="page-item {% if p == page %}active{% endif %}">
+        <a class="page-link"
+           href="?q={{ q }}&chapter_id={{ selected_chapter }}&status={{ selected_status }}&page={{ p }}&page_size={{ page_size }}">
+           {{ p }}
+        </a>
+      </li>
+    {% endfor %}
+  </ul>
+</nav>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,132 @@
+{% extends "admin/base.html" %}
+{% block title %}Donations{% endblock %}
+{% block content %}
+<h2>Member Donations</h2>
+
+<form id="donationForm">
+    <input type="hidden" id="donation_id">
+    <div class="mb-3">
+        <label for="member_id" class="form-label">Member ID</label>
+        <input type="text" class="form-control" id="member_id" required>
+    </div>
+    <div class="mb-3">
+        <label for="amount" class="form-label">Amount</label>
+        <input type="number" step="0.01" class="form-control" id="amount" required>
+    </div>
+    <div class="mb-3">
+        <label for="date" class="form-label">Date</label>
+        <input type="date" class="form-control" id="date">
+    </div>
+    <div class="mb-3">
+        <label for="purpose" class="form-label">Purpose</label>
+        <input type="text" class="form-control" id="purpose">
+    </div>
+    <button type="submit" class="btn btn-success">Save Donation</button>
+</form>
+
+<hr>
+
+<table class="table table-striped mt-4" id="donationsTable">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Member ID</th>
+            <th>Amount</th>
+            <th>Date</th>
+            <th>Purpose</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody></tbody>
+</table>
+
+<!-- Edit Modal -->
+<div class="modal fade" id="donationModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Edit Donation</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="modal_donation_id">
+        <div class="mb-3">
+          <label for="modal_amount" class="form-label">Amount</label>
+          <input type="number" step="0.01" id="modal_amount" class="form-control">
+        </div>
+        <div class="mb-3">
+          <label for="modal_purpose" class="form-label">Purpose</label>
+          <input type="text" id="modal_purpose" class="form-control">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button id="saveDonationChanges" class="btn btn-primary">Save Changes</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const donationForm = document.getElementById('donationForm');
+const donationsTableBody = document.querySelector('#donationsTable tbody');
+let donationModalObj = new bootstrap.Modal(document.getElementById('donationModal'));
+
+async function loadDonations() {
+    const memberId = document.getElementById('member_id').value;
+    const res = await fetch(`/donations/${memberId}`);
+    const records = await res.json();
+    donationsTableBody.innerHTML = "";
+    records.forEach(r => {
+        donationsTableBody.innerHTML += `
+        <tr>
+            <td>${r.id}</td>
+            <td>${r.member_id}</td>
+            <td>${r.amount}</td>
+            <td>${r.date || ''}</td>
+            <td>${r.purpose || ''}</td>
+            <td>
+                <button class="btn btn-sm btn-warning" onclick="editDonation(${r.id}, ${r.amount}, '${r.purpose}')">Edit</button>
+                <button class="btn btn-sm btn-danger" onclick="deleteDonation(${r.id})">Delete</button>
+            </td>
+        </tr>`;
+    });
+}
+
+donationForm.onsubmit = async (e) => {
+    e.preventDefault();
+    const data = {
+        member_id: document.getElementById('member_id').value,
+        amount: parseFloat(document.getElementById('amount').value),
+        date: document.getElementById('date').value,
+        purpose: document.getElementById('purpose').value
+    };
+    await fetch('/donations/', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(data)});
+    loadDonations();
+};
+
+function editDonation(id, amount, purpose) {
+    document.getElementById('modal_donation_id').value = id;
+    document.getElementById('modal_amount').value = amount;
+    document.getElementById('modal_purpose').value = purpose;
+    donationModalObj.show();
+}
+
+document.getElementById('saveDonationChanges').onclick = async () => {
+    const id = document.getElementById('modal_donation_id').value;
+    const data = {
+        amount: parseFloat(document.getElementById('modal_amount').value),
+        purpose: document.getElementById('modal_purpose').value
+    };
+    await fetch(`/donations/${id}`, {method:'PATCH', headers:{'Content-Type':'application/json'}, body: JSON.stringify(data)});
+    donationModalObj.hide();
+    loadDonations();
+};
+
+async function deleteDonation(id) {
+    if(confirm("Are you sure?")) {
+        await fetch(`/donations/${id}`, {method:'DELETE'});
+        loadDonations();
+    }
+}
+</script>
+{% endblock %}

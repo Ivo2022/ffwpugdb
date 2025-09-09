@@ -1,0 +1,81 @@
+{% extends "admin/base.html" %}
+
+{% block content %}
+
+<div class="container d-flex justify-content-center align-items-center" style="min-height: 80vh;">
+    <div class="card shadow-lg p-4 rounded-4" style="max-width: 800px; width: 100%;">
+      {% if error %}
+      <div class="alert alert-danger" role="alert">
+          {{ error }}
+      </div>
+      {% endif %}
+
+<div class="container mt-4">
+    <h2>Edit Profile</h2>
+
+    <form method="POST" action="/members/profile/edit" class="row g-3">
+        <div class="col-md-6 mb-3">
+            <label for="first_name" class="form-label">First Name</label>
+            <input type="text" class="form-control" id="first_name" name="first_name"
+                   value="{{ member.first_name if member else '' }}" required>
+        </div>
+
+        <div class="col-md-6 mb-3">
+            <label for="last_name" class="form-label">Last Name</label>
+            <input type="text" class="form-control" id="last_name" name="last_name"
+                   value="{{ member.last_name if member else '' }}" required>
+        </div>
+
+        <div class="col-md-6 mb-3">
+            <label class="form-label">Gender</label>
+            <select name="gender" class="form-select">
+              {% for s in ['select gender','male','female'] %}
+                <option value="{{ s }}" {% if member and member.gender == s %}selected{% endif %}>
+                  {{ s|capitalize }}
+                </option>
+              {% endfor %}
+            </select>
+          </div>
+        <div class="col-md-6  mb-3">
+            <label for="phone" class="form-label">Phone</label>
+            <input type="text" class="form-control" id="phone" name="phone"
+                   value="{{ member.phone if member else '' }}">
+        </div>
+
+        <div class="col-md-6 mb-3">
+            <label for="email" class="form-label">Email</label>
+            <input type="email" class="form-control" id="email" name="email"
+                   value="{{ member.email if member else user.email }}" required>
+        </div>
+
+        <div class="col-md-6 mb-3">
+            <label for="address" class="form-label">Address</label>
+            <input type="text" class="form-control" id="address" name="address"
+                   value="{{ member.address if member else '' }}">
+        </div>
+
+        <input type="file" name="photo_url" accept="image/*">
+        
+        <button type="submit" class="btn btn-primary">Save Profile</button>
+    </form>
+    {% if member and member.photo_url %}
+        <img src="{{ member.photo_url }}" alt="Profile Photo" width="120">
+    {% endif %}
+
+    <hr class="my-4">
+
+    {# Conditional Back Buttons #}
+    <div class="mb-3">
+        {% if "staff" in user.role_names %}
+            <a href="/admin/staff/dashboard" class="btn btn-outline-primary">
+                Back to Staff Dashboard
+            </a>
+        {% elif "admin" in user.role_names %}
+            <a href="/admin/dashboard" class="btn btn-outline-danger">
+                Back to Admin Dashboard
+            </a>
+        {% endif %}
+    </div>
+</div>
+</div></div>
+{% endblock %}

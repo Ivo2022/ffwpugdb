@@ -1,0 +1,112 @@
+{% extends "admin/base.html" %}
+
+{% block content %}
+<link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://code.jquery.com/ui/1.13.2/jquery-ui.js"></script>
+
+<div class="container d-flex justify-content-center align-items-center" style="min-height: 80vh;">
+  <div class="card shadow-lg p-4 rounded-4" style="max-width: 800px; width: 100%;">
+    {% if error %}
+    <div class="alert alert-danger" role="alert">
+        {{ error }}
+    </div>
+    {% endif %}
+  <h2>Add Donation</h2>
+
+  <form method="post" class="row g-3">
+    <!---
+    <div class="mb-3">
+      <label class="form-label">Member</label>
+      <select name="member_id" class="form-select" required>
+        <option value="">-- Select Member --</option>
+        {% for m in members %}
+          <option value="{{ m.id }}" {% if donation and donation.member_id == m.id %}selected{% endif %}>
+            {{ m.first_name }} {{ m.last_name }}
+          </option>
+        {% endfor %}
+      </select>
+    </div>   
+    
+    <input type="hidden" name="member_id" id="memberId" />
+
+    <div class="mb-3">
+      <label class="form-label">Member</label>
+      <input type="text" id="memberSearch" class="form-control" placeholder="Type to search member..." required />
+    </div>-->
+    <div class="mb-3">
+      <label class="form-label">Member</label>
+      <input type="text" id="memberSearch" class="form-control" placeholder="Search member by name" required>
+      <input type="hidden" id="memberId" name="member_id" required>
+    </div>
+    <!-- jQuery + jQuery UI (Autocomplete) -->      
+    <script>
+      $(function() {
+        $("#memberSearch").autocomplete({
+          source: function(request, response) {
+            $.getJSON("/donation/search-members", { q: request.term }, function(data) {
+              response(data.map(item => ({
+                label: item.name,   // what appears in dropdown
+                value: item.name,   // what is shown in the textbox
+                id: item.id         // the actual hidden ID
+              })));
+            });
+          },
+          minLength: 2,  // only start searching after typing 2 characters
+          focus: function(event, ui) {
+            // when hovering, keep the name visible
+            $("#memberSearch").val(ui.item.label);
+            return false;
+          },
+          select: function(event, ui) {
+            // put the ID into the hidden input
+            $("#memberId").val(ui.item.id);
+    
+            // show the name in the visible text field
+            $("#memberSearch").val(ui.item.label);
+    
+            return false; // prevent jQuery UI from overwriting
+          }
+        });
+      });
+    </script>
+    <script>
+      // Prevent submitting if no valid member was selected
+      $("form").on("submit", function(e) {
+        if (!$("#memberId").val()) {
+          e.preventDefault(); // stop the form from submitting
+          alert("⚠️ Please select a valid member from the list.");
+          $("#memberSearch").focus();
+        }
+      });
+    </script>
+    
+    <div class="mb-3">
+      <label class="form-label">Amount</label>
+      <input type="number" step="0.01" class="form-control" name="amount" required />
+    </div>
+  <div class="row">
+    <div class="col-md-6 mb-3">
+      <label class="form-label">Donation Type</label>
+      <select class="form-select" name="donation_type" required>
+        {% for t in ['sunday donation','tithe','other offering', 'pledge'] %}
+        <option value="{{ t }}">{{ t|capitalize }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-6 mb-3">
+      <label class="form-label">Date</label>
+      <input type="date" class="form-control" name="date" required />
+    </div>
+  </div>
+    <div class="mb-3">
+      <label class="form-label">Remarks</label>
+      <textarea class="form-control" name="remarks"></textarea>
+    </div>
+    <div class="col-12 mt-4">
+      <button class="btn btn-primary">Save Donation</button>
+      <a class="btn btn-secondary" href="/donation">Cancel</a>
+    </div>
+  </form>
+</div></div>
+{% endblock %}

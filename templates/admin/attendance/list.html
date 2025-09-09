@@ -1,0 +1,104 @@
+{% extends 'admin/base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Sidebar-style navigation -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h4 class="mb-4">Attendance Records</h4>
+            <ul class="list-group list-group-horizontal-md">
+                <li class="list-group-item"><a href="/admin/dashboard" class="text-decoration-none">Dashboard</a></li>
+                <li class="list-group-item"><a href="/members" class="text-decoration-none">Members</a></li>
+                <li class="list-group-item"><a href="/donation" class="text-decoration-none">Donations</a></li>
+                <li class="list-group-item"><a href="/attendance" class="text-decoration-none">Attendance</a></li>
+                <li class="list-group-item"><a href="/member/dashboard" class="text-decoration-none">My Dashboard</a></li>
+            </ul>
+        </div>
+    </div>
+    <!-- Filter / Search Form -->
+    <form method="get" class="row mb-3 g-2">
+        <div class="d-flex flex-wrap align-items-center mb-3 gap-2">
+            <!-- Date Filter -->
+            <div class="col-auto">
+                <input type="date" name="date" class="form-control" value="{{ filter_date }}">
+            </div>
+        
+            <!-- Search Query -->
+            <div class="col-auto">
+                <input type="text" name="q" placeholder="Search status..." class="form-control" value="{{ q }}">
+            </div>
+        
+            <!-- Filter & Reset Buttons -->
+            <div class="col-auto d-flex gap-2">
+                <button type="submit" class="btn btn-primary">Filter</button>
+                <a href="{{ url_for('attendance_list') }}" class="btn btn-secondary">Reset</a>
+            </div>
+        
+            <!-- Add Attendance pushed to the right -->
+            <div class="col-auto ms-auto">
+                <a href="{{ url_for('attendance_create_page') }}" class="btn btn-success">Add Attendance</a>
+            </div>
+        </div>
+        
+              
+    </form>
+
+    {% for date, records in attendance_grouped.items() %}
+    <div class="card mb-3">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <div>
+                <strong>Attendance Date:</strong> {{ date }}
+            </div>
+            <div>
+                <span class="me-3">Present: {{ summary_by_date[date].present or 0 }}</span>
+                <span class="me-3">Online: {{ summary_by_date[date].online or 0 }}</span>
+                <span class="me-3">Excused: {{ summary_by_date[date].excused or 0 }}</span>
+                <span class="me-3">Absent: {{ summary_by_date[date].absent or 0 }}</span>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            <table class="table table-striped table-bordered mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Member Code</th>
+                        <th>Member Name</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for a in records %}
+                    <tr>
+                        <td>{{ a.member.member_code if a.member else a.member_id }}</td>
+                        <td>{{ a.member.first_name if a.member else "N/A" }} {{ a.member.last_name if a.member else "N/A" }}</td>
+                        <td>{{ a.status|capitalize }}</td>
+                        <td>
+                            <a href="/attendance/{{ a.id }}/edit" class="btn btn-sm btn-warning">Edit</a>
+                            <form action="/attendance/{{ a.id }}/delete" method="post" style="display:inline">
+                              <button class="btn btn-sm btn-danger" onclick="return confirm('Delete attendance?')">Delete</button>
+                            </form>
+                          </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% else %}
+    <p>No attendance records found.</p>
+    {% endfor %}
+
+    <!-- Pagination -->
+    {% if pages > 1 %}
+    <nav>
+        <ul class="pagination">
+            {% for p in range(1, pages + 1) %}
+            <li class="page-item {% if p == page %}active{% endif %}">
+                <a class="page-link" href="?page={{ p }}&page_size={{ page_size }}&date={{ filter_date }}&q={{ q }}">{{ p }}</a>
+            </li>
+            {% endfor %}
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+{% endblock %}

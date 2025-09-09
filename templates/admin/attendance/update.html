@@ -1,0 +1,56 @@
+{% extends 'admin/base.html' %}
+{% block content %}
+<div class="container mt-4">
+    <h2>Edit Attendance</h2>
+    <form method="post" action="/attendance/{{ attendance.id }}/edit" class="row g-3">
+
+        <!-- Member (read-only display + hidden id) -->
+        <div class="mb-3">
+            <label class="form-label">Member</label>
+            <input type="text" class="form-control" value="{{ attendance.member.first_name }} {{ attendance.member.last_name }}" readonly>
+            <input type="hidden" name="member_id" value="{{ attendance.member_id }}">
+        </div>
+    
+        <!-- Date -->
+        <div class="mb-3">
+            <label for="attendance_date" class="form-label">Date</label>
+            <input type="date" name="attendance_date" id="attendance_date"
+                   class="form-control"
+                   value="{{ attendance.attendance_date.strftime('%Y-%m-%d') if attendance.attendance_date else '' }}" required>
+        </div>
+    
+        <!-- Status -->
+        <div class="mb-3">
+            <label for="status" class="form-label">Status</label>
+            <select name="status" id="status" class="form-select" required>
+                <option value="present" {% if attendance.status == 'present' %}selected{% endif %}>Present</option>
+                <option value="absent" {% if attendance.status == 'absent' %}selected{% endif %}>Absent</option>
+                <option value="late" {% if attendance.status == 'late' %}selected{% endif %}>Late</option>
+                <option value="excused" {% if attendance.status == 'excused' %}selected{% endif %}>Excused</option>
+            </select>
+        </div>
+    
+        <!-- Status (read-only display + hidden value) 
+        <div class="mb-3">
+            <label class="form-label">Status</label>
+            <input type="text" class="form-control" value="{{ attendance.status | capitalize }}" readonly>
+            <input type="hidden" name="status" value="{{ attendance.status }}">
+        </div> 
+        -->
+        <!-- Remarks -->
+        <div class="mb-3">
+            <label for="remarks" class="form-label">Remarks</label>
+            <textarea name="remarks" id="remarks" class="form-control">{{ attendance.remarks or '' }}</textarea>
+        </div>
+    
+        <!-- Actions -->
+        <div class="col-12">
+            <button class="btn btn-primary">Update</button>
+            <a href="{{ url_for('attendance_list') }}" class="btn btn-secondary">Cancel</a>
+        </div>
+    </form>
+    
+    
+
+</div>
+{% endblock %}

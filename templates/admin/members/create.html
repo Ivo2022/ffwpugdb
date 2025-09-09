@@ -1,0 +1,44 @@
+{% extends "admin/base.html" %}
+{% block content %}
+
+<div class="container d-flex justify-content-center align-items-center" style="min-height: 80vh;">
+  <div class="card shadow-lg p-4 rounded-4" style="max-width: 800px; width: 100%;">
+    {% if error %}
+    <div class="alert alert-danger" role="alert">
+        {{ error }}
+    </div>
+    {% endif %}
+    <h2 class="text-center mb-4">Create Member</h2>
+    <form method="post" class="row g-3">
+      <div class="col-md-4">
+        <label class="form-label">Member Code</label>
+        <input required name="member_code" class="form-control" 
+              value="{{ member.member_code if member else '' }}">
+      </div>
+      <div class="col-md-4">
+        <label class="form-label">First Name</label>
+        <input required name="first_name" class="form-control" 
+              value="{{ member.first_name if member else '' }}">
+      </div>
+      <div class="col-md-4">
+        <label class="form-label">Last Name</label>
+        <input required name="last_name" class="form-control" 
+              value="{{ member.last_name if member else '' }}">
+      </div>
+      <div class="col-md-8">
+        <label class="form-label">Email</label>
+        <input type="email" name="email" class="form-control" 
+              value="{{ member.email if member else '' }}">
+      </div>
+      <div class="col-md-4">
+        <label class="form-label">Phone Number</label>
+        <input type="text" name="phone" class="form-control" 
+              value="{{ member.phone if member else '' }}">
+      </div>
+      <div class="col-12 mt-4">
+        <button class="btn btn-primary">Create</button>
+        <a class="btn btn-secondary" href="/members">Cancel</a>
+      </div>
+    </form>
+<div></div>
+{% endblock %}
